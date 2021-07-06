@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>D11</title>
+</head>
+<body>
+	<img id="img1" src="http://rs.img.com.ua/crop?v2=1&w=600&h=0&url=%2F%2Fv.img.com.ua%2Fb%2Forig%2F6%2F5b%2F961919f583ea0db7d44c6242b92775b6.jpg" alt="" style="width: 500px;
+	height: 350px; position:absolute;top: 100px;left: 200px; ">
+
+	<script>
+    "use strict";
+		var el=document.getElementById("img1");
+		changeSize(el);
+
+		function changeSize(el) {
+
+      var massDivov=createDiv(el);//получаю массив управляющих элементов
+      for(var i=1;i<massDivov.length;i++){
+            window['sq' + i] = massDivov[i];//!! я нашла данный метод изменения имени переменной, но не знаю насколько он правильный
+        }
+
+      el.ondragstart = () => false; //отменяю обработчик по умолчанию для события dragstart для картинки
+                        
+      document.onselectstart = () => false; //отменяем выделение                 
+
+      el.addEventListener('mousedown',downImg); //устанавливаю обработчик при нажатии на картинку мышкой
+
+
+//1. Создаю элементы управления для картинки:
+      function createDiv(el){
+         var pos=el.getBoundingClientRect();
+         var mass=[];
+         var i=1;
+        while(i<=8){
+          var n=document.createElement('div');
+           n.style.cssText='background-color:blue; width:10px; height:10px; position:absolute;';
+           n.setAttribute('id','sq'+i);
+           document.body.appendChild(n);
+
+           var arrowDiv=document.createElement('div');
+            arrowDiv.style.cssText='visibility:hidden;position:absolute; top:-10px; left:-10px; width:30px;height:30px';
+            var arrowImg=document.createElement('img');
+            arrowImg.style.cssText='width:100%';
+            arrowImg.setAttribute('src','https://image.flaticon.com/icons/png/512/143/143238.png');
+            n.appendChild(arrowDiv);
+            arrowDiv.appendChild(arrowImg);
+            switch (i){
+              case 1:
+              arrowDiv.style.transform='rotate(45deg)';
+              break;
+              case 2:
+              arrowDiv.style.transform='rotate(135deg)';
+              break;
+              case 3:
+              arrowDiv.style.transform='rotate(45deg)';
+              break;
+              case 4:
+              arrowDiv.style.transform='rotate(135deg)';
+              break;
+              case 5:
+              arrowDiv.style.transform='rotate(90deg)';
+              break;
+              case 7:
+              arrowDiv.style.transform='rotate(90deg)';
+              break;
+              case 6:
+              arrowDiv.style.transform='rotate(0deg)';
+              break;
+              case 8:
+              arrowDiv.style.transform='rotate(0deg)';
+              break;
+            }
+           mass[i]=n;
+           koord(mass[i],i,pos);
+           arrowDiv.ondragstart = function() {//отменяю обработчик по умолчанию для события dragstart для элемента
+             return false;
+           };
+           mass[i].addEventListener('mouseenter',enterDiv);//устанавливаю обработчик при наведении на управляющий элемент мышкой
+           arrowDiv.addEventListener('mousedown',downDiv);//устанавливаю обработчик при нажатии на управляющий элемент мышкой
+           i++;  
+        }
+        return mass;
+      }
+ 
+//2. Создаю дополнительную функцию для расчета координат элементов управления
+    function koord(n,i,pos){
+      var nH=n.offsetHeight;
+      var nW=n.offsetWidth;
+       switch ( i ) {
+         case 1:
+         n.style.left=pos.left-nW/2+'px';
+         n.style.top=pos.top-nH/2+'px';
+         break;
+         case 2:
+         n.style.left=pos.right-nW/2+'px';
+         n.style.top=pos.top-nH/2+'px';
+         break;
+         case 3:
+         n.style.left=pos.right-nW/2+'px';
+         n.style.top=pos.bottom-nH/2+'px';
+         break;
+         case 4:
+         n.style.left=pos.left-nW/2+'px';
+         n.style.top=pos.bottom-nH/2+'px';
+         break;
+         case 5:
+         n.style.left=pos.left+pos.width/2-nW/2+'px';
+         n.style.top=pos.top-nH/2+'px';
+         break;
+         case 6:
+         n.style.left=pos.right-nW/2+'px';
+         n.style.top=pos.top+pos.height/2-nH/2+'px';
+         break;
+         case 7:
+         n.style.left=pos.left+pos.width/2-nW/2+'px';
+         n.style.top=pos.bottom-nH/2+'px';
+         break;
+         case 8:
+         n.style.left=pos.left-nW/2+'px';
+         n.style.top=pos.top+pos.height/2-nH/2+'px';
+         break;
+       }
+    }
+
+
+//3. Функция-обработчик при нажатии на саму картинку       
+      function downImg(EO){
+        EO=EO||window.event;
+        var w=EO.target;
+      
+        var shiftX = EO.clientX - w.getBoundingClientRect().left;
+        var shiftY = EO.clientY - w.getBoundingClientRect().top;
+        document.body.appendChild(w);
+        w.style.zIndex=-100;
+        moveFImg(EO.pageX, EO.pageY);
+        document.addEventListener('mousemove', mouseMoveImg);
+
+    //3.1. Функция-обработчик для перемещения картинки по экрану:
+        function mouseMoveImg(EO){
+         EO=EO||window.event;
+         moveFImg(EO.pageX,EO.pageY);         
+        }
+
+    //3.2. Функция для расчета новых координат картинки и управляющих элементов:
+        function moveFImg(pageX,pageY){
+          w.style.left = pageX - shiftX + 'px';
+          w.style.top = pageY - shiftY + 'px';
+          var pos=w.getBoundingClientRect();
+          for(var i=1;i<massDivov.length;i++){
+             koord(massDivov[i],i,pos);
+          }       
+        }
+
+        w.onmouseup = function() {
+           document.removeEventListener('mousemove', mouseMoveImg);//отменяю обработчик перемещения для картинки
+           w.onmouseup = null;
+        };
+
+      }
+
+//4. Функция-обработчик при нажатии на любой управляющий элемент:	
+function downDiv(EO){
+    EO=EO||window.event;
+    var changeW=EO.currentTarget;
+    var w=changeW.parentElement;
+    var tR=el.offsetTop;
+    var hR=el.offsetHeight;
+    var lR=el.offsetLeft;
+    var wR=el.offsetWidth;
+
+    //changeDiv(w);
+    w.removeEventListener('mouseenter',enterDiv);
+    w.onmouseleave=()=>false;
+
+    document.addEventListener('mousemove', mouseMove);
+
+    //4.1 Функция-обработчик для перемещения элемента управления по экрану:
+          function mouseMove(EO) {
+            EO=EO||window.event;
+            if(w===sq5||w===sq7){
+              var pos=ch(0,EO.pageY);            
+            }else if (w===sq6||w===sq8){ 
+              var pos=ch(EO.pageX,0);
+            }else if (w===sq1||w===sq2||w===sq3||w===sq4){
+              var pos=ch(EO.pageX,EO.pageY);
+            }
+            for(var i=1;i<massDivov.length;i++){
+              koord(massDivov[i],i,pos);
+            } 
+            			    
+          }
+
+    //4.2 Вспомогательная функция для определения новых координат и размеров картинки:
+          function ch(pageX,pageY){
+           if(w===sq1){
+             el.style.top=pageY+'px';
+             el.style.height=hR+tR-pageY+'px';
+             el.style.width=wR*(hR+tR-pageY)/hR+'px';
+             el.style.left=lR-(wR*(hR+tR-pageY)/hR-wR)+'px';
+           }else if(w===sq2){
+             el.style.top=pageY+'px';
+             el.style.height=hR+tR-pageY+'px';
+             el.style.width=wR*(hR+tR-pageY)/hR+'px';
+           }else if(w===sq3){
+             el.style.height=pageY-tR+'px';
+             el.style.width=wR*(pageY-tR)/hR+'px';
+           }else if(w===sq4){
+             el.style.left=lR-(wR*(pageY-tR)/hR-wR)+'px';
+             el.style.height=pageY-tR+'px';
+             el.style.width=wR*(pageY-tR)/hR+'px';
+           }else if(w===sq5){                   
+             el.style.top=pageY+'px';
+             el.style.height=hR+tR-pageY+'px';
+           }else if(w===sq6){
+             el.style.width=pageX-lR+'px';
+           }else if(w===sq7){
+             el.style.height=pageY-tR+'px';
+           }else if(w===sq8){
+             el.style.left=pageX+'px';
+             el.style.width=wR+lR-pageX+'px';
+           } 
+           var posNew=el.getBoundingClientRect();
+           return posNew;
+         }
+
+			    //!назначаю обработчик при отпускании кнопки мыши, но для document, т.к. курсор может уехать за пределы управляющего элемента!
+			    document.onmouseup = function() {
+				   document.removeEventListener('mousemove', mouseMove);//отменяю обработчик перемещения
+				   w.onmouseup = null;
+           w.addEventListener('mouseenter',enterDiv);
+           changeBack(w);
+         };
+
+       }
+
+     //5. Функция-обработчик при наведении на любой управляющий элемент:	
+    function enterDiv(EO){
+      let w=EO.currentTarget;
+      changeDiv(w);
+          
+          w.onmouseleave = function(){
+            changeBack(w);
+          };
+    }
+
+    //меняем вид управляющего элемента на стрелку
+    function changeDiv(el){
+       el.style.backgroundColor='transparent';
+       let arrowDiv=el.getElementsByTagName('div')[0];
+       arrowDiv.style.visibility='visible';
+    }
+
+     //меняем вид управляющего элемента обратно на квадрат
+    function changeBack(el){
+      el.style.backgroundColor='blue';
+       let arrowDiv=el.getElementsByTagName('div')[0];
+       arrowDiv.style.visibility='hidden';
+    }    
+   
+    }
+  </script>
+</body>
+</html>
